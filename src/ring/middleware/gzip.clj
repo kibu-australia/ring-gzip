@@ -39,15 +39,6 @@
     false
     true))
 
-(defn- supported-type?
-  [resp]
-  (let [{:keys [headers body]} resp]
-    (or (string? body)
-        (seq? body)
-        (instance? InputStream body)
-        (and (instance? File body) 
-             (re-seq #"(?i)\.(htm|html|css|js|json|xml)" (pr-str body))))))
-
 (def ^:private min-length 859)
 
 (defn- supported-size?
@@ -64,7 +55,6 @@
   (let [{:keys [status headers]} resp]
     (and (supported-status? status)
          (unencoded-type? headers)
-         (supported-type? resp)
          (supported-size? resp))))
 
 (defn- compress-body
@@ -92,7 +82,5 @@
   (fn [req]
     (if (accepts-gzip? req)
       (let [resp (handler req)]
-        (if (supported-response? resp)
-          (gzip-response resp)
-          resp))
+        (gzip-response resp))
       (handler req))))
